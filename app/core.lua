@@ -56,8 +56,10 @@ function ctx.queueAction(action)
 end
 
 local function startup()
-    -- TODO: May need to remove once shifted to actual in game (cc)
-    config.set("http_enable", true)
+    -- Craftos emulator only
+    if config and config.set then
+        config.set("http_enable", true)  -- emulator only
+    end
     local player_api = require("app.api.player")
 
     if config_path then
