@@ -2,6 +2,8 @@ local ui = require("app.ui.ui")
 local rift_api = require("app.api.rift")
 local M = {}
 
+local poll_gen = 0
+local POLL_INTERVAL = 1
 local gps_connected = true
 local distance = nil
 
@@ -23,6 +25,8 @@ end
 function M.load(state, ctx)
     -- Check if gps is active
     fetchGps()
+    poll_gen = poll_gen + 1
+    ctx.setTimer(POLL_INTERVAL, "poll:" .. poll_gen)
 end
 
 function M.draw(state)
@@ -35,7 +39,6 @@ function M.draw(state)
         print("GPS disconnected. Reconnect at spawn")
         return
     end
-    ui.button(10, 4, "Locate", "locate")
     if distance then
         term.setCursorPos(10, 1)
         term.write("Distance:")
@@ -43,7 +46,9 @@ function M.draw(state)
         term.write(distance)
         term.setCursorPos(1, 1)
     end
-    ui.button(11, 12, "Fish", "fish")
+    if distance == 0 then
+        ui.button(11, 12, "Fish", "fish")
+    end
 end
 
 local function fishRift()
@@ -85,10 +90,12 @@ local function locateRift()
 end
 
 function M.handle(state, action, ctx)
-    if action == "locate" then
-        locateRift()
-    elseif action == "fish" then
+    if action == "fish" then
         return fishRift()
+    elseif type(action) == "string" and action:sub(1, 5) == "poll:" then
+        if tonumber(action:sub(6)) ~= poll_gen then return end
+        locateRift()
+        ctx.setTimer(POLL_INTERVAL, action)
     end
 end
 
