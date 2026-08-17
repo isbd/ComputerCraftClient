@@ -63,7 +63,7 @@ local function startup()
 
     -- Ensure wireless modem, excluding emulator
     local attachment = peripheral.wrap("back")
-    if not config and (not attachment or not attach.isWireless()) then
+    if not config and (not attachment or not attachment.isWireless()) then
         print("Program requires advanced modem to be attached.")
         sleep(1)
         return
