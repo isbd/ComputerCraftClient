@@ -13,8 +13,11 @@ local function fetchGps()
     else
         gps_connected = true
     end
-    -- return x, y, z
-    return 0, 0, 0
+    -- Emulator
+    if config then
+        return 0, 0, 0
+    end
+    return x, y, z
 end
 
 function M.load(state, ctx)
