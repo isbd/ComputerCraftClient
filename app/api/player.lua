@@ -11,11 +11,11 @@ function M.register(name)
     return data
 end
 
-function M.get_player(player_id)
+function M.getPlayer(player_id)
     return core.get("/player/" .. player_id)
 end
 
-function M.get_self()
+function M.getSelf()
     local config = core.load_config()
     if not config or not config.player_id then
         return nil, "No player config found"
@@ -23,7 +23,7 @@ function M.get_self()
     return core.get("/player/" .. config.player_id)
 end
 
-function M.get_players()
+function M.getPlayers()
     return core.get("/player")
 end
 

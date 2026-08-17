@@ -1,5 +1,7 @@
 local REPO = "https://raw.githubusercontent.com/isbd/ComputerCraftClient/main/"
 
+-- TODO: Add versioning handler
+
 local function get(path)
     -- cache buster matters most on the manifest itself
     return http.get(REPO .. path .. "?v=" .. os.epoch("utc"))

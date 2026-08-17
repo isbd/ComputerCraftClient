@@ -6,6 +6,9 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+
+    term.setCursorBlink(false)
+    term.clear()
     term.setCursorPos(2, 1)
     term.write("== Monster Game ==")
     ui.button(2, 3, "Party", "goto:party")

@@ -4,12 +4,12 @@ local M = {}
 local idx = 1
 local mon_list = {}
 
-local function print_value(key, value, indent)
+local function printValue(key, value, indent)
     indent = indent or ""
     if type(value) == "table" then
         print(indent .. key .. ":")
         for k, v in pairs(value) do
-            print_value(k, v, indent .. "  ")
+            printValue(k, v, indent .. "  ")
         end
     else
         print(indent .. key .. ": " .. tostring(value))
@@ -17,7 +17,7 @@ local function print_value(key, value, indent)
 end
 
 function M.load(state, ctx)
-    local result, err = mon_api.get_monsters()
+    local result, err = mon_api.getMonsters()
 
     if not result then
         print("=== ERROR: ===")
@@ -30,8 +30,9 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
-    term.setCursorPos(1, 1)
     term.setCursorBlink(false)
+    term.clear()
+    term.setCursorPos(1, 1)
     local half_width = math.floor(ui.width / 2)
     local hud = window.create(term.current(), 1, 1, ui.width, 1)
     local mon = window.create(term.current(), 1, 2, half_width, 16)

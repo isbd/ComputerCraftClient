@@ -6,6 +6,8 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+    term.setCursorBlink(false)
+    term.clear()
     term.setCursorPos(2, 1)
     term.write("== Party ==")
     if not state.party then
@@ -17,7 +19,7 @@ function M.draw(state)
             term.write(mon.name .. "  Lv" .. mon.level .. "  " .. mon.hp .. "hp")
         end
     end
-    ui.button(2, 12, "Back", "goto:menu")
+    ui.button(1, 20, "Back", "goto:menu")
 end
 
 function M.handle(state, action, ctx)

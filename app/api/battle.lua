@@ -10,7 +10,7 @@ function M.catch()
     return core.post("/battle/catch")
 end
 
-function M.get_moves()
+function M.getMoves()
     return core.get("/battle/moves")
 end
 

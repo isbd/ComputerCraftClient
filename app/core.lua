@@ -60,10 +60,19 @@ local function startup()
     if config and config.set then
         config.set("http_enable", true)  -- emulator only
     end
+
+    -- Ensure wireless modem, excluding emulator
+    local attachment = peripheral.wrap("back")
+    if not config and (not attachment or not attach.isWireless()) then
+        print("Program requires advanced modem to be attached.")
+        sleep(1)
+        return
+    end
+
     local player_api = require("app.api.player")
 
     if config_path then
-        api.set_config_path(config_path)
+        api.setConfigPath(config_path)
         print("Using config:" .. config_path)
         os.sleep(1)
     end
@@ -75,20 +84,21 @@ local function startup()
         if not data then
             error("Registration failed.")
         end
-        term.write("Registered as " .. data.name .. "!")
+        print("Registered as " .. data.name .. "!")
         os.sleep(.5)
     end
-    term.write("Logging in with ".. config_path)
+    print("Logging in with ".. config_path)
 
-    local ws, ws_err = api.connect_ws()
+    local ws, ws_err = api.connectWs()
     if ws then
-        term.write("WebSocket connected.")
+        print("WebSocket connected.")
     else
-        os.error("WebSocket failed: " .. tostring(ws_err))
+        print("Error connecting".. tostring(ws_err))
+        return
     end
     os.sleep(.5)
     ctx.ws = ws
-    ctx.player_id = api.load_player_id()
+    ctx.player_id = api.loadPlayerId()
     ctx.ws_opened_at = os.clock()
 
     navigate("menu")

@@ -8,6 +8,8 @@ end
 
 function M.draw(state)
     term.setCursorBlink(false)
+    term.clear()
+    term.setCursorPos(1, 1)
 
     local half_width = math.floor(ui.width / 2)
 

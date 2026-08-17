@@ -1,36 +1,92 @@
 local ui = require("app.ui.ui")
+local rift_api = require("app.api.rift")
 local M = {}
 
+local gps_connected = true
+local distance = nil
+
+local function fetchGps()
+    local x, y, z = gps.locate()
+    if not x then
+        gps_connected = false
+        distance = nil
+    else
+        gps_connected = true
+    end
+    -- return x, y, z
+    return 0, 0, 0
+end
+
 function M.load(state, ctx)
-    -- load actions
+    -- Check if gps is active
+    fetchGps()
 end
 
 function M.draw(state)
     term.setCursorBlink(false)
+    term.clear()
+    term.setCursorPos(1, 1)
+    ui.button(1, 20, "Back", "goto:menu")
+    if not gps_connected then
+        term.setCursorPos(1, 1)
+        print("GPS disconnected. Reconnect at spawn")
+        return
+    end
+    ui.button(10, 4, "Locate", "locate")
+    if distance then
+        term.setCursorPos(10, 1)
+        term.write("Distance:")
+        term.setCursorPos(13, 2)
+        term.write(distance)
+        term.setCursorPos(1, 1)
+    end
+    ui.button(11, 12, "Fish", "fish")
+end
 
-    local half_width = math.floor(ui.width / 2)
+local function fishRift()
+    local x, y, z = fetchGps()
+    if not x then
+        return
+    end
+    local result, err = rift_api.calibrate(x, z)
 
-    local hud = window.create(term.current(), 1, 1, ui.width, 1)
-    local mon_hud_a = window.create(term.current(), 1, 2, half_width, 1)
-    local mon_hud_b = window.create(term.current(), half_width + 1, 2, ui.width - half_width, 1)
-    local mon_a = window.create(term.current(), 1, 2, half_width, 16)
-    local mon_b = window.create(term.current(), half_width + 1, 2, ui.width - half_width, 16)
-    local bar  = window.create(term.current(), 1, 18, ui.width, 3)
-    local mod_a_box  = require("/lib.pixelbox_lite").new(mon_a)
-    local mod_b_box  = require("/lib.pixelbox_lite").new(mon_b)
+    if not result then
+        term.write("=== ERROR: ===")
+        term.write(err or "Unknown error (nil returned)")
+        return
+    end
 
-    ui.fillPixelbox(mod_a_box, colors.white)
-    ui.fillPixelbox(mod_b_box, colors.blue)
+    if result.success then
+        return "goto:battle"
+    end
+end
 
-    ui.renderWindowMessage(hud, "HUD", colors.black, colors.lime)
+local function locateRift()
+    local x, y, z = fetchGps()
+    if not x then
+        return
+    end
+    local result, err = rift_api.fishRifts(x, z)
 
-    ui.renderWindowMessage(mon_hud_a, "A", colors.yellow, colors.white)
-    ui.renderWindowMessage(mon_hud_b, "B", colors.green, colors.white)
-    ui.renderWindowMessage(bar, "BAR TEST", colors.gray, colors.yellow)
+    if not result then
+        term.write("=== ERROR: ===")
+        term.write(err or "Unknown error (nil returned)")
+        return
+    end
+
+    if result.success then
+        distance = result.distance
+    else
+        distance = nil
+    end
 end
 
 function M.handle(state, action, ctx)
-    -- screen-specific actions
+    if action == "locate" then
+        locateRift()
+    elseif action == "fish" then
+        return fishRift()
+    end
 end
 
 function M.onKey(state, ev, p1, ctx)

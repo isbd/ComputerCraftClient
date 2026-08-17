@@ -26,20 +26,6 @@ function M.hitTest(x, y)
     end
 end
 
-function M.fillPixelbox(mod_box, color)
-    if mod_box.clear then
-        mod_box:clear(color)
-    else
-        for y = 1, mod_box.height do
-        local row = mod_box.canvas[y]
-        for x = 1, mod_box.width do
-            row[x] = color
-        end
-        end
-    end
-    mod_box:render()
-end
-
 function M.renderWindowMessage(win, message, bg_color, text_color)
     bg_color = bg_color or colors.gray
     text_color = text_color or colors.white

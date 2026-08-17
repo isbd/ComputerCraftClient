@@ -27,7 +27,7 @@ local function reloadChallenges()
     received_challenges = result.received_challenges
 
     if sent_challenge == nil then
-        local result_players, err_players = player_api.get_players()
+        local result_players, err_players = player_api.getPlayers()
         if not result_players then
             term.write("=== ERROR: ===")
             term.write(err_players or "Unknown error (nil returned)")
@@ -84,6 +84,7 @@ end
 
 function M.draw(state)
     term.setCursorBlink(false)
+    term.clear()
     term.setCursorPos(2, 1)
     term.write("== Challenges ==")
     challengers:draw()
@@ -96,12 +97,12 @@ function M.draw(state)
         term.write("from ".. sent_challenge.challenged .."...")
         ui.button(2, 13, "Cancel Request", "cancel")
     end
-    ui.button(2, 20, "Back", "goto:menu")
+    ui.button(1, 20, "Back", "goto:menu")
 end
 
 local function respond(state, challenge, response)
     -- May want to have the server cancel requested challenges if you accept one (server side)
-    encounter_api.respond_challenge(challenge.challenge_id, response == "accept")
+    encounter_api.respondChallenge(challenge.challenge_id, response == "accept")
     if response == "accept" then
         return "goto:battle"
     elseif response == "reject" then
@@ -119,7 +120,7 @@ function M.handle(state, action, ctx)
         encounter_api.challenge(action.user.id)
         reloadChallenges()
     elseif action == "cancel" then
-        encounter_api.cancel_challenge(sent_challenge.challenge_id)
+        encounter_api.cancelChallenge(sent_challenge.challenge_id)
         reloadChallenges()
     end
 end

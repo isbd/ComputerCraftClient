@@ -1,15 +1,15 @@
-local API_BASE = "http://api:8000"
+local API_BASE = "http://192.168.1.94:8000"
 local config_path = "config.json"
 
 local WS_BASE = API_BASE:gsub("^http", "ws")
 
 local M = {}
 
-function M.set_config_path(path)
+function M.setConfigPath(path)
     config_path = path
 end
 
-function M.load_config()
+function M.loadConfig()
     if not fs.exists(config_path) then
         return nil
     end
@@ -19,25 +19,25 @@ function M.load_config()
     return data
 end
 
-function M.save_config(data)
+function M.saveConfig(data)
     local f = fs.open(config_path, "w")
     f.write(textutils.serialiseJSON(data))
     f.close()
 end
 
-function M.load_player_id()
-    local config = M.load_config()
+function M.loadPlayerId()
+    local config = M.loadConfig()
     if not config then return nil end
     return config.player_id
 end
 
-function M.load_api_key()
-    local config = M.load_config()
+function M.loadApiKey()
+    local config = M.loadConfig()
     if not config then return nil end
     return config.api_key
 end
 
-function M.post_unauthed(path, body)
+function M.postUnauthed(path, body)
     local url = API_BASE .. path
     http.request({
         url = url,
@@ -59,7 +59,7 @@ function M.post_unauthed(path, body)
 end
 
 function M.request(method, path, body)
-    local key = M.load_api_key()
+    local key = M.loadApiKey()
     if not key then
         error("No API key found. Register first.")
     end
@@ -104,8 +104,8 @@ end
 function M.get(path) return M.request("GET", path) end
 function M.post(path, body) return M.request("POST", path, body or {}) end
 
-function M.connect_ws()
-    local key = M.load_api_key()
+function M.connectWs()
+    local key = M.loadApiKey()
     if not key then
         return nil, "No API key found. Register first."
     end
