@@ -74,6 +74,37 @@ function M.renderWindowMessage(win, message, bg_color, text_color)
     win.setVisible(true)
 end
 
+function M.renderHealthBar(win, current, max, health_color, text_color, empty_color)
+    health_color = health_color or colors.lime
+    empty_color = empty_color or colors.gray
+    text_color = text_color or colors.white
+    local width = win.getSize()
+    if width < 1 then
+        return
+    end
+
+    current = math.max(0, current)
+    local filled = math.floor(width * current / max + 0.5)
+    if current > 0 and filled == 0 then
+        filled = 1
+    end
+    if current < max and filled == width then
+        filled = width - 1
+    end
+
+    local label = current .. "/" .. max
+
+    local pad = math.floor((width - #label) / 2)
+    local text = (" "):rep(pad) .. label .. (" "):rep(width - #label - pad)
+
+    win.setCursorPos(1, 1)
+    win.blit(
+        text,
+        colors.toBlit(text_color):rep(width),
+        colors.toBlit(health_color):rep(filled) .. colors.toBlit(empty_color):rep(width - filled)
+    )
+end
+
 -- Drawing
 function M.fillRect(x, y, w, h, bg)
     term.setBackgroundColor(bg or colors.gray)

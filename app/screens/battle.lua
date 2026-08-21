@@ -32,20 +32,16 @@ function M.draw(state)
     local mod_a_box  = require("/lib.pixelbox_lite").new(mon_a)
     local mod_b_box  = require("/lib.pixelbox_lite").new(mon_b)
 
+    ui.renderWindowMessage(hud, "HUD", colors.black, colors.lime)
+    ui.renderWindowMessage(bar, "BAR TEST", colors.gray, colors.yellow)
+
     if encounter_details ~= nil then
         ui.renderImage(mod_a_box, encounter_details.self_mon.texture)
         ui.renderImage(mod_b_box, encounter_details.opponent_mon.texture)
-    end
-
-    -- ui.fillPixelbox(mod_a_box, colors.white)
-    -- ui.fillPixelbox(mod_b_box, colors.blue)
-
-    ui.renderWindowMessage(hud, "HUD", colors.black, colors.lime)
-
-    if encounter_details ~= nil then
-        ui.renderWindowMessage(mon_hud_a, "A", colors.yellow, colors.white)
-        ui.renderWindowMessage(mon_hud_b, "B", colors.green, colors.white)
-        ui.renderWindowMessage(bar, "BAR TEST", colors.gray, colors.yellow)
+        -- ui.renderWindowMessage(mon_hud_a, encounter_details.self_mon.current_health .. "/" .. encounter_details.self_mon.max_health, colors.lime, colors.white)
+        -- ui.renderWindowMessage(mon_hud_b, encounter_details.opponent_mon.current_health .. "/" .. encounter_details.opponent_mon.max_health, colors.lime, colors.white)
+        ui.renderHealthBar(mon_hud_a, encounter_details.self_mon.current_health, encounter_details.self_mon.max_health)
+        ui.renderHealthBar(mon_hud_b, encounter_details.opponent_mon.current_health, encounter_details.opponent_mon.max_health, colors.green)
     end
 end
 
@@ -56,6 +52,12 @@ function M.onKey(state, ev, p1, ctx)
         elseif p1 == keys.s then
             encounter_api.surrender()
             return "goto:menu"
+        elseif p1 == keys.o then
+            -- Testing
+            encounter_details.opponent_mon.current_health = encounter_details.opponent_mon.current_health - 1
+        elseif p1 == keys.p then
+            -- Testing
+            encounter_details.self_mon.current_health = encounter_details.self_mon.current_health - 1
         end
     end
 end
