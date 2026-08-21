@@ -96,19 +96,34 @@ function M.applyPalette(pal)
     end
 end
 
-function M.renderImage(box, image)
+local function parseTexture(image_str)
+    -- Turn string into table
+    if type(image_str) == "table" then
+        return image_str
+    end
+    local rows = {}
+    for line in (image_str .. "\n"):gmatch("([^\n]*)\n") do
+        rows[#rows + 1] = line
+    end
+    return rows
+end
+
+function M.renderImage(box, image_str)
+    local image_table = parseTexture(image_str)
     local canvas = box.canvas
     for y = 1, box.height do
         local canvas_row = canvas[y]
-        local image_row  = image[y]
-        for x = 1, box.width do
-        local char = image_row and image_row[x]
-        if char and char ~= " " then
-            local color = colors.fromBlit(char)
-            if color then
-            canvas_row[x] = color
+        local image_row = image_table[y]
+        if image_row then
+            for x = 1, box.width do
+                local char = image_row:sub(x, x)
+                if char ~= "" and char ~= " " then
+                    local color = colors.fromBlit(char)
+                    if color then
+                        canvas_row[x] = color
+                    end
+                end
             end
-        end
         end
     end
     box:render()
