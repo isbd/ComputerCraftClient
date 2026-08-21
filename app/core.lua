@@ -136,7 +136,8 @@ function M.run(config)
                 if action then dispatch(action) end
             end
         elseif ev == "websocket_closed" then
-            os.error("WebSocket failed: ".. tostring(p3))
+            -- TO DO: FIX WEBSOCKET FAILURE
+            -- os.error("WebSocket failed: ".. tostring(p3))
         elseif ev == "timer" then
             local action = ctx.timers[p1]
             if action then

@@ -1,9 +1,19 @@
 local ui = require("app.ui.ui")
 local encounter_api = require("app.api.encounter")
 local M = {}
+local encounter_details = nil
 
 function M.load(state, ctx)
-    -- load actions
+    local result, err = encounter_api.encounter()
+
+    if not result then
+        print("=== ERROR: ===")
+        print(err or "Unknown error (nil returned)")
+        return
+    end
+
+    encounter_details = result
+    idx = 1
 end
 
 function M.draw(state)
@@ -22,14 +32,21 @@ function M.draw(state)
     local mod_a_box  = require("/lib.pixelbox_lite").new(mon_a)
     local mod_b_box  = require("/lib.pixelbox_lite").new(mon_b)
 
-    ui.fillPixelbox(mod_a_box, colors.white)
-    ui.fillPixelbox(mod_b_box, colors.blue)
+    if encounter_details ~= nil then
+        ui.renderImage(mod_a_box, encounter_details.self_mon.texture)
+        ui.renderImage(mod_b_box, encounter_details.opponent_mon.texture)
+    end
+
+    -- ui.fillPixelbox(mod_a_box, colors.white)
+    -- ui.fillPixelbox(mod_b_box, colors.blue)
 
     ui.renderWindowMessage(hud, "HUD", colors.black, colors.lime)
 
-    ui.renderWindowMessage(mon_hud_a, "A", colors.yellow, colors.white)
-    ui.renderWindowMessage(mon_hud_b, "B", colors.green, colors.white)
-    ui.renderWindowMessage(bar, "BAR TEST", colors.gray, colors.yellow)
+    if encounter_details ~= nil then
+        ui.renderWindowMessage(mon_hud_a, "A", colors.yellow, colors.white)
+        ui.renderWindowMessage(mon_hud_b, "B", colors.green, colors.white)
+        ui.renderWindowMessage(bar, "BAR TEST", colors.gray, colors.yellow)
+    end
 end
 
 function M.onKey(state, ev, p1, ctx)
