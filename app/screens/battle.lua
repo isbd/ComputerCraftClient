@@ -38,8 +38,6 @@ function M.draw(state)
     if encounter_details ~= nil then
         ui.renderImage(mod_a_box, encounter_details.self_mon.texture)
         ui.renderImage(mod_b_box, encounter_details.opponent_mon.texture)
-        -- ui.renderWindowMessage(mon_hud_a, encounter_details.self_mon.current_health .. "/" .. encounter_details.self_mon.max_health, colors.lime, colors.white)
-        -- ui.renderWindowMessage(mon_hud_b, encounter_details.opponent_mon.current_health .. "/" .. encounter_details.opponent_mon.max_health, colors.lime, colors.white)
         ui.renderHealthBar(mon_hud_a, encounter_details.self_mon.current_health, encounter_details.self_mon.max_health)
         ui.renderHealthBar(mon_hud_b, encounter_details.opponent_mon.current_health, encounter_details.opponent_mon.max_health, colors.green)
     end
