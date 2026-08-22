@@ -41,6 +41,10 @@ function M.draw(state)
     local mod_box  = require("/lib.pixelbox_lite").new(mon)
 
     local mon_inst = mon_list[idx]
+
+    local texture = mon_inst.species.texture
+    ui.renderImage(mod_box, texture)
+
     local formatted_mon_data = (
         mon_inst.species.name .. "\n"..
         mon_inst.level .."\n"..

@@ -3,11 +3,11 @@ local core = require("app.api.core")
 local M = {}
 
 function M.register(name)
-    local data = core.post_unauthed("/player/", { name = name })
+    local data = core.postUnauthed("/player/", { name = name })
     if not data then
         return nil, "Registration failed"
     end
-    core.save_config({ api_key = data.api_key, player_id = data.id })
+    core.saveConfig({ api_key = data.api_key, player_id = data.id })
     return data
 end
 
@@ -16,7 +16,7 @@ function M.getPlayer(player_id)
 end
 
 function M.getSelf()
-    local config = core.load_config()
+    local config = core.loadConfig()
     if not config or not config.player_id then
         return nil, "No player config found"
     end

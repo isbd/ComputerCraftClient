@@ -74,6 +74,37 @@ function M.renderWindowMessage(win, message, bg_color, text_color)
     win.setVisible(true)
 end
 
+function M.renderHealthBar(win, current, max, health_color, text_color, empty_color)
+    health_color = health_color or colors.lime
+    empty_color = empty_color or colors.gray
+    text_color = text_color or colors.white
+    local width = win.getSize()
+    if width < 1 then
+        return
+    end
+
+    current = math.max(0, current)
+    local filled = math.floor(width * current / max + 0.5)
+    if current > 0 and filled == 0 then
+        filled = 1
+    end
+    if current < max and filled == width then
+        filled = width - 1
+    end
+
+    local label = current .. "/" .. max
+
+    local pad = math.floor((width - #label) / 2)
+    local text = (" "):rep(pad) .. label .. (" "):rep(width - #label - pad)
+
+    win.setCursorPos(1, 1)
+    win.blit(
+        text,
+        colors.toBlit(text_color):rep(width),
+        colors.toBlit(health_color):rep(filled) .. colors.toBlit(empty_color):rep(width - filled)
+    )
+end
+
 -- Drawing
 function M.fillRect(x, y, w, h, bg)
     term.setBackgroundColor(bg or colors.gray)
@@ -96,19 +127,34 @@ function M.applyPalette(pal)
     end
 end
 
-function M.renderImage(box, image)
+local function parseTexture(image_str)
+    -- Turn string into table
+    if type(image_str) == "table" then
+        return image_str
+    end
+    local rows = {}
+    for line in (image_str .. "\n"):gmatch("([^\n]*)\n") do
+        rows[#rows + 1] = line
+    end
+    return rows
+end
+
+function M.renderImage(box, image_str)
+    local image_table = parseTexture(image_str)
     local canvas = box.canvas
     for y = 1, box.height do
         local canvas_row = canvas[y]
-        local image_row  = image[y]
-        for x = 1, box.width do
-        local char = image_row and image_row[x]
-        if char and char ~= " " then
-            local color = colors.fromBlit(char)
-            if color then
-            canvas_row[x] = color
+        local image_row = image_table[y]
+        if image_row then
+            for x = 1, box.width do
+                local char = image_row:sub(x, x)
+                if char ~= "" and char ~= " " then
+                    local color = colors.fromBlit(char)
+                    if color then
+                        canvas_row[x] = color
+                    end
+                end
             end
-        end
         end
     end
     box:render()
