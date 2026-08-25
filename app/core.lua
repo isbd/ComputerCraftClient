@@ -60,6 +60,7 @@ local function startup()
     if config and config.set then
         config.set("http_enable", true)  -- emulator only
     end
+    ui.applyPalette()
 
     -- Ensure wireless modem, excluding emulator
     local attachment = peripheral.wrap("back")
@@ -156,6 +157,7 @@ function M.run(config)
 
     term.setBackgroundColor(colors.black)
     term.clear()
+    ui.resetPalette()
     term.setCursorPos(1, 1)
 end
 
