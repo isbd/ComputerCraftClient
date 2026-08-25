@@ -2,6 +2,25 @@ local M = {}
 M.buttons = {}
 M.width, M.height = term.getSize()
 
+local default_pal = {
+    ["0"]=0xD2C9A5,
+    ["1"]=0xAE5D40,
+    ["2"]=0xC77B58,
+    ["3"]=0x8CABA1,
+    ["4"]=0xB3A555,
+    ["5"]=0x847875,
+    ["6"]=0xD1B187,
+    ["7"]=0x4D4539,
+    ["8"]=0xAB9B8E,
+    ["9"]=0x574852,
+    ["a"]=0xBA9158,
+    ["b"]=0x4B726E,
+    ["c"]=0x927441,
+    ["d"]=0x77743B,
+    ["e"]=0x79444A,
+    ["f"]=0x4B3D44,
+}
+
 function M.reset()
     M.buttons = {}
     term.setBackgroundColor(colors.black)
@@ -117,13 +136,23 @@ function M.fillRect(x, y, w, h, bg)
 end
 
 function M.applyPalette(pal)
-    if not pal then return end
+    if not pal then
+        pal = default_pal
+    end
     local t = term.current()
-    for digit, rgb in pairs(pal) do
+    for digit, hex in pairs(pal) do
         local colorConst = colors.fromBlit(digit)
         if colorConst then
-            t.setPaletteColor(colorConst, rgb[1], rgb[2], rgb[3])
+            t.setPaletteColor(colorConst, hex)
         end
+    end
+end
+
+function M.resetPalette()
+    local t = term.current()
+    for idx = 0, 15 do
+        local c = 2 ^ idx
+        t.setPaletteColor(c, term.nativePaletteColor(c))
     end
 end
 
