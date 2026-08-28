@@ -11,6 +11,8 @@ local opponent_mon_health = nil
 local opponent_mon_max_health = nil
 -- basic, wait, fight
 local panel_type = "basic"
+local display_text = ""
+local animation_details = nil
 
 function M.load(state, ctx)
     local result, err = encounter_api.encounter()
@@ -31,16 +33,18 @@ function M.load(state, ctx)
         opponent_mon_max_health = result.opponent_mon.max_health
     end
     panel_type = "basic"
+    animation_details = nil
     encounter_details = result
     idx = 1
+    display_text = ""
 end
 
-function draw_waiting_panel(panel)
+function drawWaitingPanel(panel)
     -- Awaiting players response
     ui.renderWindowMessage(panel, "Awaiting Response...", colors.gray, colors.white)
 end
 
-function draw_combat_panel()
+function drawCombatPanel()
     local result, err = battle_api.getMoves()
     local by_slot = {}
     for _, move in ipairs(result.moves) do
@@ -68,7 +72,7 @@ function draw_combat_panel()
     end
 end
 
-function draw_basic_panel(start)
+function drawBasicPanel(start)
     ui.button(2, 18, "Fight", "basic:fight", colors.white, colors.lightGray)
     ui.button(15, 18, "Bag", "basic:bag", colors.white, colors.lightGray)
     ui.button(2, 20, "Party", "basic:party", colors.white, colors.lightGray)
@@ -82,11 +86,11 @@ function M.draw(state)
 
     local half_width = math.floor(ui.width / 2)
 
-    -- local hud = window.create(term.current(), 1, 1, ui.width, 1)
+    local text_hud = window.create(term.current(), 1, 2, ui.width, 1)
     local mon_hud_a = window.create(term.current(), 1, 1, half_width, 1)
     local mon_hud_b = window.create(term.current(), half_width + 1, 1, ui.width - half_width, 1)
-    local mon_a = window.create(term.current(), 1, 1, half_width, 16)
-    local mon_b = window.create(term.current(), half_width + 1, 1, ui.width - half_width, 16)
+    local mon_a = window.create(term.current(), 1, 2, half_width, 16)
+    local mon_b = window.create(term.current(), half_width + 1, 2, ui.width - half_width, 16)
     local bar  = window.create(term.current(), 1, 18, ui.width, 3)
     local mon_a_box  = require("/lib.pixelbox_lite").new(mon_a)
     local mon_b_box  = require("/lib.pixelbox_lite").new(mon_b)
@@ -106,26 +110,117 @@ function M.draw(state)
         ui.renderHealthBar(mon_hud_b, opponent_mon_health, opponent_mon_max_health, colors.green)
     end
 
+    ui.renderWindowMessage(text_hud, display_text, colors.pink, colors.black)
+
     -- Panel logic
     ui.buttons = {}
     if panel_type == "basic" then
-        draw_basic_panel()
+        drawBasicPanel()
     elseif panel_type == "move" then
-        draw_combat_panel()
+        drawCombatPanel()
     elseif panel_type == "wait" then
-        draw_waiting_panel(bar)
+        drawWaitingPanel(bar)
     end
 end
 
-function update_round()
-    local result, err = battle_api.getTurn()
+function attackMessageFormatter(person, move_name, missed)
+    local turn_message = person .." used ".. move_name
+    if missed then
+        turn_message = turn_message .. " and missed!"
+    end
+    return turn_message
+end
 
-    self_mon_health = math.max(0, result.opponent_mon_attack.target_pre_damage_health - result.opponent_mon_attack.damage_dealt)
-    self_mon_max_health = result.opponent_mon_attack.target_max_health
-    opponent_mon_health = math.max(0, result.self_mon_attack.target_pre_damage_health - result.self_mon_attack.damage_dealt)
-    opponent_mon_max_health = result.self_mon_attack.target_max_health
+function updateRound(ctx)
+    local result, err = battle_api.getTurn()
+    local animate_step
+
+    if err then
+        print("ERROR ISSUE")
+        os.sleep(3)
+        return
+    end
+
+    if result.self_first then
+        animate_step = "self"
+    else
+        animate_step = "opponent"
+    end
+
+    local self_turn_message = attackMessageFormatter(
+        "You",
+        result.self_mon_attack.move_name,
+        result.self_mon_attack.missed
+    )
+
+    local opponent_turn_message = attackMessageFormatter(
+        "Opponent",
+        result.opponent_mon_attack.move_name,
+        result.opponent_mon_attack.missed
+    )
+
+    animation_details = {
+        animate_step = animate_step,
+        second_phase = false,
+        opponent_turn_message = opponent_turn_message,
+        self_health = result.opponent_mon_attack.target_pre_damage_health,
+        self_damaged = result.opponent_mon_attack.damage_dealt,
+        self_turn_message = self_turn_message,
+        opponent_health = result.self_mon_attack.target_pre_damage_health,
+        opponent_damaged = result.self_mon_attack.damage_dealt,
+    }
+
+    ctx.setTimer(.1, "animate")
+
     -- TODO: Sprites may need updates
     -- display the moves
+end
+
+function relativeHealthDecrease(damage, divisor)
+    return math.max(1, math.floor(damage / divisor))
+end
+
+function animateHealth(ctx)
+    -- Check which animate_step is on
+    if animation_details == nil then
+        return
+    end
+
+    if animation_details.animate_step == "self" then
+        if animation_details.opponent_damaged < 1 then
+            if animation_details.second_phase == false then
+                animation_details.second_phase = true
+                animation_details.animate_step = "opponent"
+                ctx.setTimer(.3, "animate")
+                return
+            else
+                animation_details = nil
+                return
+            end
+        end
+        increment = relativeHealthDecrease(animation_details.opponent_damaged, 3)
+        animation_details.opponent_health = animation_details.opponent_health - increment
+        animation_details.opponent_damaged = animation_details.opponent_damaged - increment
+        opponent_mon_health = math.max(0, animation_details.opponent_health)
+        ctx.setTimer(.3, "animate")
+    elseif animation_details.animate_step == "opponent" then
+        if animation_details.self_damaged < 1 then
+            if animation_details.second_phase == false then
+                animation_details.second_phase = true
+                animation_details.animate_step = "self"
+                ctx.setTimer(.3, "animate")
+                return
+            else
+                animation_details = nil
+                return
+            end
+        end
+        increment = relativeHealthDecrease(animation_details.self_damaged, 3)
+        animation_details.self_health = animation_details.self_health - increment
+        animation_details.self_damaged = animation_details.self_damaged - increment
+        self_mon_health = math.max(0, animation_details.self_health)
+        ctx.setTimer(.3, "animate")
+    end
 end
 
 function M.handle(state, action, ctx)
@@ -144,7 +239,7 @@ function M.handle(state, action, ctx)
             if result.active == false then
                 return "goto:menu"
             end
-            update_round()
+            updateRound(ctx)
             panel_type = "basic"
         else
             panel_type = "wait"
@@ -158,8 +253,10 @@ function M.handle(state, action, ctx)
             encounter_api.surrender()
             return "goto:menu"
         end
+    elseif action == "animate" then
+        animateHealth(ctx)
     elseif action == "round_resolved" then
-        update_round()
+        updateRound(ctx)
         panel_type = "basic"
     end
 end

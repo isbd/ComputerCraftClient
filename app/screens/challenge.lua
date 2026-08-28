@@ -103,9 +103,11 @@ end
 
 local function respond(state, challenge, response)
     -- May want to have the server cancel requested challenges if you accept one (server side)
-    encounter_api.respondChallenge(challenge.challenge_id, response == "accept")
+    local result, err = encounter_api.respondChallenge(challenge.challenge_id, response == "accept")
     if response == "accept" then
-        return "goto:battle"
+        if not err then
+            return "goto:battle"
+        end
     elseif response == "reject" then
         reloadChallenges()
     end
