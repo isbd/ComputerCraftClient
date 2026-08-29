@@ -83,6 +83,7 @@ function M.draw(state)
     term.setCursorBlink(false)
     term.clear()
     term.setCursorPos(1, 1)
+    -- TODO: Add better filtering to prevent blinking
 
     local half_width = math.floor(ui.width / 2)
 
@@ -110,11 +111,13 @@ function M.draw(state)
         ui.renderHealthBar(mon_hud_b, opponent_mon_health, opponent_mon_max_health, colors.green)
     end
 
-    ui.renderWindowMessage(text_hud, display_text, colors.pink, colors.black)
+    -- ui.renderWindowMessage(text_hud, display_text, colors.pink, colors.black)
 
     -- Panel logic
     ui.buttons = {}
-    if panel_type == "basic" then
+    if animation_details ~= nil then
+        ui.renderWindowMessage(bar, display_text, colors.pink, colors.black)
+    elseif panel_type == "basic" then
         drawBasicPanel()
     elseif panel_type == "move" then
         drawCombatPanel()
@@ -126,7 +129,7 @@ end
 function attackMessageFormatter(person, move_name, missed)
     local turn_message = person .." used ".. move_name
     if missed then
-        turn_message = turn_message .. " and missed!"
+        turn_message = turn_message .. ". Missed!"
     end
     return turn_message
 end
@@ -135,6 +138,7 @@ function updateRound(ctx)
     local result, err = battle_api.getTurn()
     local animate_step
 
+    -- TODO: better error handling
     if err then
         print("ERROR ISSUE")
         os.sleep(3)
@@ -154,7 +158,7 @@ function updateRound(ctx)
     )
 
     local opponent_turn_message = attackMessageFormatter(
-        "Opponent",
+        "Opp",
         result.opponent_mon_attack.move_name,
         result.opponent_mon_attack.missed
     )
@@ -162,6 +166,7 @@ function updateRound(ctx)
     animation_details = {
         animate_step = animate_step,
         second_phase = false,
+        initial_message = true,
         opponent_turn_message = opponent_turn_message,
         self_health = result.opponent_mon_attack.target_pre_damage_health,
         self_damaged = result.opponent_mon_attack.damage_dealt,
@@ -173,54 +178,71 @@ function updateRound(ctx)
     ctx.setTimer(.1, "animate")
 
     -- TODO: Sprites may need updates
-    -- display the moves
 end
 
 function relativeHealthDecrease(damage, divisor)
     return math.max(1, math.floor(damage / divisor))
 end
 
-function animateHealth(ctx)
-    -- Check which animate_step is on
+function animationHandler(ctx)
     if animation_details == nil then
         return
     end
 
+    if animation_details.initial_message == true then
+        if animation_details.animate_step == "self" then
+            display_text = animation_details.self_turn_message
+        elseif animation_details.animate_step == "opponent" then
+            display_text = animation_details.opponent_turn_message
+        end
+        animation_details.initial_message = false
+        ctx.setTimer(1.5, "animate")
+    else
+        if animateHealth(ctx) then
+            ctx.setTimer(.3, "animate")
+        else
+            display_text = ""
+        end
+    end
+end
+
+function animateHealth(ctx)
     if animation_details.animate_step == "self" then
         if animation_details.opponent_damaged < 1 then
             if animation_details.second_phase == false then
                 animation_details.second_phase = true
+                animation_details.initial_message = true
                 animation_details.animate_step = "opponent"
-                ctx.setTimer(.3, "animate")
-                return
+                return true
             else
                 animation_details = nil
-                return
+                return false
             end
         end
         increment = relativeHealthDecrease(animation_details.opponent_damaged, 3)
         animation_details.opponent_health = animation_details.opponent_health - increment
         animation_details.opponent_damaged = animation_details.opponent_damaged - increment
         opponent_mon_health = math.max(0, animation_details.opponent_health)
-        ctx.setTimer(.3, "animate")
+        return true
     elseif animation_details.animate_step == "opponent" then
         if animation_details.self_damaged < 1 then
             if animation_details.second_phase == false then
                 animation_details.second_phase = true
+                animation_details.initial_message = true
                 animation_details.animate_step = "self"
-                ctx.setTimer(.3, "animate")
-                return
+                return true
             else
                 animation_details = nil
-                return
+                return false
             end
         end
         increment = relativeHealthDecrease(animation_details.self_damaged, 3)
         animation_details.self_health = animation_details.self_health - increment
         animation_details.self_damaged = animation_details.self_damaged - increment
         self_mon_health = math.max(0, animation_details.self_health)
-        ctx.setTimer(.3, "animate")
+        return true
     end
+    return false
 end
 
 function M.handle(state, action, ctx)
@@ -254,7 +276,7 @@ function M.handle(state, action, ctx)
             return "goto:menu"
         end
     elseif action == "animate" then
-        animateHealth(ctx)
+        animationHandler(ctx)
     elseif action == "round_resolved" then
         updateRound(ctx)
         panel_type = "basic"
