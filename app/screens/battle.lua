@@ -126,18 +126,8 @@ function M.draw(state)
     end
 end
 
-function attackMessageFormatter(person, move_name, missed)
-    local turn_message = person .." used ".. move_name
-    if missed then
-        turn_message = turn_message .. ". Missed!"
-    end
-    return turn_message
-end
-
 function updateRound(ctx)
     local result, err = battle_api.getTurn()
-    local animate_step
-
     -- TODO: better error handling
     if err then
         print("ERROR ISSUE")
@@ -145,36 +135,10 @@ function updateRound(ctx)
         return
     end
 
-    if result.self_first then
-        animate_step = "self"
-    else
-        animate_step = "opponent"
-    end
-
-    local self_turn_message = attackMessageFormatter(
-        "You",
-        result.self_mon_attack.move_name,
-        result.self_mon_attack.missed
-    )
-
-    local opponent_turn_message = attackMessageFormatter(
-        "Opp",
-        result.opponent_mon_attack.move_name,
-        result.opponent_mon_attack.missed
-    )
-
     animation_details = {
-        animate_step = animate_step,
-        second_phase = false,
         initial_message = true,
-        opponent_turn_message = opponent_turn_message,
-        self_health = result.opponent_mon_attack.target_pre_damage_health,
-        self_damaged = result.opponent_mon_attack.damage_dealt,
-        self_turn_message = self_turn_message,
-        opponent_health = result.self_mon_attack.target_pre_damage_health,
-        opponent_damaged = result.self_mon_attack.damage_dealt,
+        actions = result.actions,
     }
-
     ctx.setTimer(.1, "animate")
 
     -- TODO: Sprites may need updates
@@ -189,12 +153,13 @@ function animationHandler(ctx)
         return
     end
 
+    if #animation_details.actions == 0 then
+        animation_details = nil
+        return
+    end
+
     if animation_details.initial_message == true then
-        if animation_details.animate_step == "self" then
-            display_text = animation_details.self_turn_message
-        elseif animation_details.animate_step == "opponent" then
-            display_text = animation_details.opponent_turn_message
-        end
+        display_text = animation_details.actions[1].message
         animation_details.initial_message = false
         ctx.setTimer(1.5, "animate")
     else
@@ -207,42 +172,35 @@ function animationHandler(ctx)
 end
 
 function animateHealth(ctx)
-    if animation_details.animate_step == "self" then
-        if animation_details.opponent_damaged < 1 then
-            if animation_details.second_phase == false then
-                animation_details.second_phase = true
-                animation_details.initial_message = true
-                animation_details.animate_step = "opponent"
-                return true
-            else
-                animation_details = nil
-                return false
-            end
+    local current = animation_details.actions[1]
+
+    if current.current_health == nil then
+        current.current_health = current.target_pre_damage_health
+    end
+
+    if current.damage_dealt < 1 then
+        table.remove(animation_details.actions, 1)
+        if #animation_details.actions < 1 then
+            animation_details = nil
+            return false
         end
-        increment = relativeHealthDecrease(animation_details.opponent_damaged, 3)
-        animation_details.opponent_health = animation_details.opponent_health - increment
-        animation_details.opponent_damaged = animation_details.opponent_damaged - increment
-        opponent_mon_health = math.max(0, animation_details.opponent_health)
-        return true
-    elseif animation_details.animate_step == "opponent" then
-        if animation_details.self_damaged < 1 then
-            if animation_details.second_phase == false then
-                animation_details.second_phase = true
-                animation_details.initial_message = true
-                animation_details.animate_step = "self"
-                return true
-            else
-                animation_details = nil
-                return false
-            end
-        end
-        increment = relativeHealthDecrease(animation_details.self_damaged, 3)
-        animation_details.self_health = animation_details.self_health - increment
-        animation_details.self_damaged = animation_details.self_damaged - increment
-        self_mon_health = math.max(0, animation_details.self_health)
+        animation_details.initial_message = true
+        current = animation_details.actions[1]
         return true
     end
-    return false
+
+    local increment = relativeHealthDecrease(current.damage_dealt, 3)
+    current.current_health = current.current_health - increment
+    current.damage_dealt = current.damage_dealt - increment
+
+    if current.actor == "self" then
+        opponent_mon_health = math.max(0, current.current_health)
+        opponent_mon_max_health = current.target_max_health
+    else
+        self_mon_health = math.max(0, current.current_health)
+        self_mon_max_health = current.target_max_health
+    end
+    return true
 end
 
 function M.handle(state, action, ctx)
