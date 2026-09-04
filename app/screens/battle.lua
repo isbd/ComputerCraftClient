@@ -100,8 +100,8 @@ function M.draw(state)
     end
 
     if encounter_details ~= nil then
-        ui.renderHealthBar(mon_hud_a, self_mon_health, self_mon_max_health)
-        ui.renderHealthBar(mon_hud_b, opponent_mon_health, opponent_mon_max_health, colors.green)
+        ui.renderHealthBar(mon_hud_a, self_mon_health, self_mon_max_health, colors.green)
+        ui.renderHealthBar(mon_hud_b, opponent_mon_health, opponent_mon_max_health, colors.red)
     end
 
     -- ui.renderWindowMessage(text_hud, display_text, colors.pink, colors.black)
