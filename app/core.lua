@@ -23,6 +23,7 @@ ctx.timers = {}
 
 local function navigate(name)
     if not screens[name] then return end
+    ctx.clearTimers()
     state.screen = name
     screens[name].load(state, ctx)
     state.dirty = true
@@ -49,6 +50,21 @@ end
 function ctx.setTimer(seconds, action)
     local id = os.startTimer(seconds)
     ctx.timers[id] = action
+    return id
+end
+
+function ctx.clearTimers()
+    for id in pairs(ctx.timers) do
+        os.cancelTimer(id)
+    end
+    ctx.timers = {}
+end
+
+function ctx.cancelTimer(id)
+    if id and ctx.timers[id] then
+        os.cancelTimer(id)
+        ctx.timers[id] = nil
+    end
 end
 
 function ctx.queueAction(action)

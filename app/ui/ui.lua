@@ -31,9 +31,11 @@ end
 
 function M.button(x, y, label, action, color_text, color_bg)
     term.setCursorPos(x, y)
-    term.setBackgroundColor(color_text or colors.gray)
+    term.setTextColor(color_text or colors.white)
+    term.setBackgroundColor(color_bg or colors.gray)
     term.write(" " .. label .. " ")
-    term.setBackgroundColor(color_bg or colors.black)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
     table.insert(M.buttons, {x=x, y=y, w=#label+2, action=action})
 end
 

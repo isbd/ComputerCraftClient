@@ -64,8 +64,8 @@ function M.load(state, ctx)
             term.setCursorPos(x + 1, y)
             term.write(ch.challenger)
             term.setBackgroundColor(colors.black)
-            ui.button(x + w - 11, y, "Y", { type = "accept", challenge = ch }, colors.green)
-            ui.button(x + w - 7, y, "X",  { type = "reject", challenge = ch }, colors.red)
+            ui.button(x + w - 11, y, "Y", { type = "accept", challenge = ch }, colors.white, colors.green)
+            ui.button(x + w - 7, y, "X",  { type = "reject", challenge = ch }, colors.white, colors.red)
         end
     }
     challengeable = challengeable or panel.newPanelList{
@@ -76,10 +76,11 @@ function M.load(state, ctx)
             term.setCursorPos(x + 1, y)
             term.write(usr.name)
             term.setBackgroundColor(colors.black)
-            ui.button(x + w - 11, y, "CHALLENGE", { type = "challenge", user = usr }, colors.orange)
+            ui.button(x + w - 11, y, "CHALLENGE", { type = "challenge", user = usr }, colors.white, colors.orange)
         end
     }
     reloadChallenges()
+    -- If there is an active encounter need to relocate to battle
 end
 
 function M.draw(state)
@@ -102,9 +103,11 @@ end
 
 local function respond(state, challenge, response)
     -- May want to have the server cancel requested challenges if you accept one (server side)
-    encounter_api.respondChallenge(challenge.challenge_id, response == "accept")
+    local result, err = encounter_api.respondChallenge(challenge.challenge_id, response == "accept")
     if response == "accept" then
-        return "goto:battle"
+        if not err then
+            return "goto:battle"
+        end
     elseif response == "reject" then
         reloadChallenges()
     end

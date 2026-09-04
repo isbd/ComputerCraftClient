@@ -14,4 +14,8 @@ function M.getMoves()
     return core.get("/battle/moves")
 end
 
+function M.getTurn()
+    return core.get("/battle/turn")
+end
+
 return M
