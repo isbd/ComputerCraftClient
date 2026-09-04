@@ -13,6 +13,8 @@ local opponent_mon_max_health = nil
 local panel_type = "basic"
 local display_text = ""
 local animation_details = nil
+local move_cache = nil
+local resolve_battle = false
 
 function M.load(state, ctx)
     local result, err = encounter_api.encounter()
@@ -35,8 +37,9 @@ function M.load(state, ctx)
     panel_type = "basic"
     animation_details = nil
     encounter_details = result
-    idx = 1
     display_text = ""
+    move_cache = nil
+    resolve_battle = false
 end
 
 function drawWaitingPanel(panel)
@@ -45,18 +48,7 @@ function drawWaitingPanel(panel)
 end
 
 function drawCombatPanel()
-    local result, err = battle_api.getMoves()
     local by_slot = {}
-    for _, move in ipairs(result.moves) do
-        by_slot[move.slot] = move
-    end
-
-    if not result then
-        print("=== MOVES ERROR: ===")
-        print(err or "Unknown error (nil returned)")
-        os.sleep(.5)
-        return
-    end
 
     local layout = {
         [1] = {2, 18},
@@ -65,10 +57,11 @@ function drawCombatPanel()
         [4] = {15, 20},
     }
 
-    for slot = 1, #by_slot do
-        local x, y = layout[slot][1], layout[slot][2]
-        local move = by_slot[slot]
-        ui.button(x, y, "".. by_slot[slot].name, "move:".. slot, colors.white, colors.lightGray)
+    for _, move in ipairs(move_cache) do
+        local pos = layout[move.slot]
+        if pos then
+            ui.button(pos[1], pos[2], move.name, "move:" .. move.slot, colors.white, colors.lightGray)
+        end
     end
 end
 
@@ -119,7 +112,7 @@ function M.draw(state)
         ui.renderWindowMessage(bar, display_text, colors.pink, colors.black)
     elseif panel_type == "basic" then
         drawBasicPanel()
-    elseif panel_type == "move" then
+    elseif panel_type == "move" and move_cache then
         drawCombatPanel()
     elseif panel_type == "wait" then
         drawWaitingPanel(bar)
@@ -140,7 +133,6 @@ function updateRound(ctx)
         actions = result.actions,
     }
     ctx.setTimer(.1, "animate")
-
     -- TODO: Sprites may need updates
 end
 
@@ -217,9 +209,13 @@ function M.handle(state, action, ctx)
 
         if result.pending == false then
             if result.active == false then
-                return "goto:menu"
+                resolve_battle = true
             end
-            updateRound(ctx)
+            animation_details = {
+                initial_message = true,
+                actions = result.round_details.actions,
+            }
+            ctx.setTimer(.1, "animate")
             panel_type = "basic"
         else
             panel_type = "wait"
@@ -228,6 +224,14 @@ function M.handle(state, action, ctx)
     elseif type(action) == "string" and action:sub(1, 6) == "basic:" then
         local option = action:sub(7)
         if option == "fight" then
+            local result, err = battle_api.getMoves()
+            if not result then
+                print("=== MOVES ERROR: ===")
+                print(err or "Unknown error")
+                os.sleep(.5)
+                return
+            end
+            move_cache = result.moves
             panel_type = "move"
         elseif option == "run" then
             encounter_api.surrender()
@@ -235,8 +239,11 @@ function M.handle(state, action, ctx)
         end
     elseif action == "animate" then
         animationHandler(ctx)
+        if resolve_battle and animation_details == nil then
+            return "goto:menu"
+        end
     elseif action == "round_resolved" then
-        updateRound(ctx)
+        ctx.setTimer(.1, "animate")
         panel_type = "basic"
     end
 end
@@ -259,8 +266,17 @@ function M.eventHandler(state, event, event_name, event_message)
     if ev_type == "battle_forfeited" then
         return "goto:menu"
     elseif ev_type == "encounter_over" then
-        return "goto:menu"
+        animation_details = {
+            initial_message = true,
+            actions = event_message.round_details.actions,
+        }
+        resolve_battle = true
+        return "round_resolved"
     elseif ev_type == "round_resolved" then
+        animation_details = {
+            initial_message = true,
+            actions = event_message.round_details.actions,
+        }
         return "round_resolved"
     end
 end
