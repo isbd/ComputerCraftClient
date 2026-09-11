@@ -1,21 +1,5 @@
 local ui = require("app.ui.ui")
-local shop_api = require("app.api.shop")
 local M = {}
-
-local function fetchGps()
-    local x, y, z = gps.locate()
-    if not x then
-        gps_connected = false
-        distance = nil
-    else
-        gps_connected = true
-    end
-    -- Emulator
-    if config then
-        return -9, 0, 53
-    end
-    return x, y, z
-end
 
 function M.load(state, ctx)
     -- load actions
@@ -25,21 +9,18 @@ function M.draw(state)
 
     term.setCursorBlink(false)
     term.clear()
-    term.setCursorPos(2, 1)
-    term.write("== Monster Game ==")
-    ui.button(2, 3, "Party", "goto:party")
-    ui.button(2, 5, "Challenge", "goto:challenge")
-    ui.button(2, 7, "Fish", "goto:fish")
-    ui.button(2, 9, "MonManager", "goto:monmanager")
-    ui.button(2, 11, "Heal", "heal")
-    ui.button(2, 13, "Quit",  "quit")
+    local text_hud = window.create(term.current(), 1, 1, ui.width, 1)
+    ui.renderWindowMessage(text_hud, "Monster Game", colors.gray, colors.yellow)
+    ui.button(2, 3, "Echo Hunter", "goto:hunt")
+    ui.button(2, 5, "MonManager", "goto:monmanager")
+    ui.button(2, 7, "Challenge", "goto:challenge")
+    ui.button(2, 9, "Shop", "goto:shop")
+    -- ui.button(2, 11, "Party", "goto:party")
+    ui.button(1, ui.height, "Quit",  "quit")
 end
 
 function M.handle(state, action, ctx)
-    if action == "heal" then
-        local x, _, z = fetchGps()
-        shop_api.healMon(x, z)
-    end
+
 end
 
 function M.onKey(state, ev, p1, ctx)

@@ -84,10 +84,10 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+    local text_hud = window.create(term.current(), 1, 1, ui.width, 1)
     term.setCursorBlink(false)
     term.clear()
-    term.setCursorPos(2, 1)
-    term.write("== Challenges ==")
+    ui.renderWindowMessage(text_hud, "Challenges", colors.gray, colors.yellow)
     challengers:draw()
     if sent_challenge == nil then
         challengeable:draw()

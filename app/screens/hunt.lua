@@ -28,24 +28,25 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+    local text_hud = window.create(term.current(), 1, 1, ui.width, 1)
     term.setCursorBlink(false)
     term.clear()
-    term.setCursorPos(1, 1)
+    ui.renderWindowMessage(text_hud, "Echo Hunter", colors.gray, colors.yellow)
     ui.button(1, 20, "Back", "goto:menu")
     if not gps_connected then
-        term.setCursorPos(1, 1)
+        term.setCursorPos(1, 3)
         print("GPS disconnected. Reconnect at spawn")
         return
     end
     if distance then
-        term.setCursorPos(10, 1)
+        term.setCursorPos(10, 3)
         term.write("Distance:")
-        term.setCursorPos(13, 2)
+        term.setCursorPos(13, 4)
         term.write(distance)
-        term.setCursorPos(1, 1)
+        term.setCursorPos(1, 3)
     end
     if distance == 0 then
-        ui.button(11, 12, "Fish", "fish")
+        ui.button(11, 12, "Engage", "engage")
     end
 end
 
@@ -88,7 +89,7 @@ local function locateRift()
 end
 
 function M.handle(state, action, ctx)
-    if action == "fish" then
+    if action == "engage" then
         return fishRift()
     elseif action == "poll" then
         locateRift()

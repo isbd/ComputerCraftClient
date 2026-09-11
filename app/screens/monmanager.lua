@@ -30,15 +30,16 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+    local text_hud = window.create(term.current(), 1, 1, ui.width, 1)
     term.setCursorBlink(false)
     term.clear()
-    term.setCursorPos(1, 1)
+    ui.renderWindowMessage(text_hud, "Monster Manager", colors.gray, colors.yellow)
     local half_width = math.floor(ui.width / 2)
-    local hud = window.create(term.current(), 1, 1, ui.width, 1)
     local mon = window.create(term.current(), 1, 2, half_width, 16)
     local mon_data = window.create(term.current(), half_width + 1, 2, ui.width - half_width, 16)
     local bar  = window.create(term.current(), 1, 18, ui.width, 3)
     local mod_box  = require("/lib.pixelbox_lite").new(mon)
+    ui.button(1, 20, "Back", "goto:menu")
 
     local mon_inst = mon_list[idx]
 

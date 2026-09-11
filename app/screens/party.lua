@@ -6,10 +6,10 @@ function M.load(state, ctx)
 end
 
 function M.draw(state)
+    local text_hud = window.create(term.current(), 1, 1, ui.width, 1)
     term.setCursorBlink(false)
     term.clear()
-    term.setCursorPos(2, 1)
-    term.write("== Party ==")
+    ui.renderWindowMessage(text_hud, "Party", colors.gray, colors.yellow)
     if not state.party then
         term.setCursorPos(2, 3)
         term.write("Failed to load :(")

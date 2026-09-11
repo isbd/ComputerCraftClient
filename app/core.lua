@@ -1,16 +1,16 @@
 local ui = require("app.ui.ui")
 local M = {}
-
 local api = require("app.api.core")
 local config_path = nil
 
 local screens = {
-    menu  = require("app.screens.menu"),
+    menu = require("app.screens.menu"),
     party = require("app.screens.party"),
     challenge = require("app.screens.challenge"),
-    fish = require("app.screens.fish"),
+    hunt = require("app.screens.hunt"),
     battle = require("app.screens.battle"),
     monmanager = require("app.screens.monmanager"),
+    shop = require("app.screens.shop")
 }
 
 local state = {

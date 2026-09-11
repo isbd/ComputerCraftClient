@@ -93,6 +93,8 @@ function M.renderWindowMessage(win, message, bg_color, text_color)
     end
 
     win.setVisible(true)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
 end
 
 function M.renderHealthBar(win, current, max, health_color, text_color, empty_color)
