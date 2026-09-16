@@ -64,8 +64,8 @@ function M.load(state, ctx)
             term.setCursorPos(x + 1, y)
             term.write(ch.challenger)
             term.setBackgroundColor(colors.black)
-            ui.button(x + w - 11, y, "Y", { type = "accept", challenge = ch }, colors.white, colors.green)
-            ui.button(x + w - 7, y, "X",  { type = "reject", challenge = ch }, colors.white, colors.red)
+            ui.button(x + w - 11, y, " Y ", { type = "accept", challenge = ch }, colors.white, colors.green)
+            ui.button(x + w - 7, y, " X ",  { type = "reject", challenge = ch }, colors.white, colors.red)
         end
     }
     challengeable = challengeable or panel.newPanelList{
@@ -76,7 +76,7 @@ function M.load(state, ctx)
             term.setCursorPos(x + 1, y)
             term.write(usr.name)
             term.setBackgroundColor(colors.black)
-            ui.button(x + w - 11, y, "CHALLENGE", { type = "challenge", user = usr }, colors.white, colors.orange)
+            ui.button(x + w - 11, y, " CHALLENGE ", { type = "challenge", user = usr }, colors.white, colors.orange)
         end
     }
     reloadChallenges()
@@ -96,9 +96,9 @@ function M.draw(state)
         term.write("Awaiting response")
         term.setCursorPos(2, 12)
         term.write("from ".. sent_challenge.challenged .."...")
-        ui.button(2, 13, "Cancel Request", "cancel")
+        ui.button(2, 13, " Cancel Request ", "cancel")
     end
-    ui.button(1, 20, "Back", "goto:menu")
+    ui.button(1, 20, " Back ", "goto:menu")
 end
 
 local function respond(state, challenge, response)

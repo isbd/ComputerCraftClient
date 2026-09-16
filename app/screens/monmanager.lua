@@ -39,7 +39,7 @@ function M.draw(state)
     local mon_data = window.create(term.current(), half_width + 1, 2, ui.width - half_width, 16)
     local bar  = window.create(term.current(), 1, 18, ui.width, 3)
     local mod_box  = require("/lib.pixelbox_lite").new(mon)
-    ui.button(1, 20, "Back", "goto:menu")
+    ui.button(1, 20, " Back ", "goto:menu")
 
     local mon_inst = mon_list[idx]
 

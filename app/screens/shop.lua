@@ -71,13 +71,13 @@ function M.draw(state)
         ui.renderWindowMessage(warning, "GPS Not Connected!", colors.red, colors.white)
     else
         if within_range then
-            ui.button(2, 3, "Heal", "heal")
+            ui.button(2, 3, " Heal ", "heal")
         else
             ui.renderWindowMessage(warning, "Outside Shop Range!", colors.red, colors.white)
         end
     end
-    ui.button(ui.width - 8, 20, "Refresh", "refresh")
-    ui.button(1, 20, "Back", "goto:menu")
+    ui.button(ui.width - 8, 20, " Refresh ", "refresh")
+    ui.button(1, 20, " Back ", "goto:menu")
 end
 
 function M.handle(state, action, ctx)
@@ -96,6 +96,12 @@ function M.handle(state, action, ctx)
         within_range = false
         inRangeDetector()
         ctx.setTimer(POLL_INTERVAL, "poll")
+    end
+end
+
+function M.onKey(state, ev, p1, ctx)
+    if ev == "key" and p1 == keys.q then
+        return "goto:menu"
     end
 end
 

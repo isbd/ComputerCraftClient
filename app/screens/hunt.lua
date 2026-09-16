@@ -1,5 +1,6 @@
 local ui = require("app.ui.ui")
 local rift_api = require("app.api.rift")
+local encounter_api = require("app.api.encounter")
 local M = {}
 
 local POLL_INTERVAL = 1
@@ -33,6 +34,11 @@ function M.draw(state)
     term.clear()
     ui.renderWindowMessage(text_hud, "Echo Hunter", colors.gray, colors.yellow)
     ui.button(1, 20, "Back", "goto:menu")
+
+    -- Emulator
+    if config then
+        ui.button(1, 17, "Catch Override", "catch_override")
+    end
     if not gps_connected then
         term.setCursorPos(1, 3)
         print("GPS disconnected. Reconnect at spawn")
@@ -94,6 +100,17 @@ function M.handle(state, action, ctx)
     elseif action == "poll" then
         locateRift()
         ctx.setTimer(POLL_INTERVAL, action)
+    elseif action == "catch_override" then
+        local result, err = encounter_api.attemptWild()
+        if result ~= nil then
+            if result.success == true then
+                return "goto:battle"
+            end
+        else
+            -- TODO: cleanup
+            print(err)
+            os.sleep(1)
+        end
     end
 end
 

@@ -29,20 +29,43 @@ function M.reset()
     term.setCursorPos(1, 1)
 end
 
-function M.button(x, y, label, action, color_text, color_bg)
+function M.button(x, y, label, action, color_text, color_bg, type_sensitive)
     term.setCursorPos(x, y)
     term.setTextColor(color_text or colors.white)
     term.setBackgroundColor(color_bg or colors.gray)
-    term.write(" " .. label .. " ")
+    term.write(label)
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
-    table.insert(M.buttons, {x=x, y=y, w=#label+2, action=action})
+    local mouse_sensitive = false
+    if type_sensitive ~= nil then
+        mouse_sensitive = true
+    end
+    table.insert(M.buttons, {x=x, y=y, w=#label, action=action, mouse_sensitive=mouse_sensitive})
 end
 
-function M.hitTest(x, y)
+function M.hitTest(mouse_type, x, y)
     for _, b in ipairs(M.buttons) do
         if y == b.y and x >= b.x and x < b.x + b.w then
-            return b.action
+            if b.mouse_sensitive == true then
+                if type(b.action) == "table" then
+                    local temp_action = b.action
+                    if mouse_type == 1 then
+                        temp_action.type = "mouse_l:".. temp_action.type
+                        return  temp_action
+                    else
+                        temp_action.type = "mouse_r:".. temp_action.type
+                        return temp_action
+                    end
+                else
+                    if mouse_type == 1 then
+                        return "mouse_l:".. b.action
+                    else
+                        return "mouse_r:".. b.action
+                    end
+                end
+            else
+                return b.action
+            end
         end
     end
 end

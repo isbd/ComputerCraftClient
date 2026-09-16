@@ -135,7 +135,7 @@ function M.run(config)
 
         local ev, p1, p2, p3 = os.pullEvent()
         if ev == "mouse_click" then
-            dispatch(ui.hitTest(p2, p3))
+            dispatch(ui.hitTest(p1, p2, p3))
         elseif ev == "mouse_scroll" then
             local scr = screens[state.screen]
             if scr.onScroll then

@@ -67,7 +67,8 @@ end
 
 function drawBasicPanel(start)
     ui.button(2, 18, "Fight", "basic:fight", colors.white, colors.lightGray)
-    ui.button(15, 18, "Bag", "basic:bag", colors.white, colors.lightGray)
+    -- ui.button(15, 18, "Bag", "basic:bag", colors.white, colors.lightGray)
+    ui.button(15, 18, "Catch", "basic:catch", colors.white, colors.lightGray)
     ui.button(2, 20, "Party", "basic:party", colors.white, colors.lightGray)
     ui.button(15, 20, "Run", "basic:run", colors.white, colors.lightGray)
 end
@@ -236,6 +237,11 @@ function M.handle(state, action, ctx)
         elseif option == "run" then
             encounter_api.surrender()
             return "goto:menu"
+        elseif option == "catch" then
+            local result, err = battle_api.catch()
+            if result.success == true then
+                return "goto:menu"
+            end
         end
     elseif action == "animate" then
         animationHandler(ctx)
@@ -253,7 +259,7 @@ function M.onKey(state, ev, p1, ctx)
         if p1 == keys.s then
             encounter_api.surrender()
             return "goto:menu"
-        elseif p1 == keys.b then
+        elseif p1 == keys.q then
             if panel_type ~= "wait" then
                 panel_type = "basic"
             end
